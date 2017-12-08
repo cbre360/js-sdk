@@ -179,8 +179,7 @@ export class KinveyRequest extends NetworkRequest {
       });
     }
 
-    let prm = new KinveyRequest(o)
-      .execute();
+    let prm = new KinveyRequest(o).execute();
     if (dataOnly) {
       prm = prm.then(r => r.data);
     }
