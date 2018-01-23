@@ -11,7 +11,6 @@ export { Files } from './files';
 export { Log } from './log';
 export { Metadata } from './metadata';
 export { Query } from './query';
-export { Properties } from './request';
 export { User } from './user';
 export {
   ActiveUserError,
