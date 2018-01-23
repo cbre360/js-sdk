@@ -9,7 +9,6 @@ import isString from 'lodash/isString';
 import { Client } from '../client';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
-import { Log } from '../log';
 import { isDefined, appendQuery } from '../utils';
 import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../errors';
 import { Request, RequestMethod } from './request';
@@ -386,20 +385,6 @@ export class KinveyRequest extends NetworkRequest {
 
       })
       .then(() => {
-        const now = new Date();
-        if (!this.client._expireTime) {
-          this.client._expireTime = new Date();
-          this.client._expireTime.setTime(this.client._expireTime.getTime() + 1000 * 25);
-          Log.debug('set debugging tiemout to ', this.client._expireTime);
-        } else if (this.url.indexOf('login') !== -1 || this.url.indexOf('oauth') !== -1) {
-          Log.debug('continuing the refresh process, do not throw exception', this.url);
-        } else if (now > this.client._expireTime) {
-          Log.debug('throwing debug timeout');
-          throw new InvalidCredentialsError('manually throwing error');
-        } else {
-          Log.debug('did not catch conditional for debug expire time', this.client._expireTime);
-          Log.debug(now);
-        }
         return super.execute();
       })
       .then((response) => {
@@ -428,15 +413,11 @@ export class KinveyRequest extends NetworkRequest {
           if (isDefined(activeUser)) {
 
             if (this.client._isRefreshing === true) {
-              Log.debug('refresh in process, retrying request after refresh');
               return new Promise(resolve => setTimeout(resolve, 400)).then(() => {
-                Log.debug('after delay retrying request');
                 return this.execute(rawResponse, true);
               });
             }
-            Log.debug('enabling refresh lock');
             this.client._isRefreshing = true;
-            Log.debug('refreshing access token');
             const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
             const sessionKey = Object.keys(socialIdentity)
               .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
@@ -501,15 +482,10 @@ export class KinveyRequest extends NetworkRequest {
                     });
                 })
                 .then(() => {
-                  Log.debug('unlocking refresh lock');
                   this.client._isRefreshing = false;
-                  this.client._expireTime = undefined;
-
                   return this.execute(rawResponse, false);
                 })
                 .catch(err => {
-                  Log.debug('error deferring request');
-                  Log.debug(err);
                   return Promise.reject(err);
                 });
             }
