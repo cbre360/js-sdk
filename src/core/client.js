@@ -9,6 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import { storageType } from './datastore';
 import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
 import { StorageProvider } from './datastore';
+import { Subject } from 'rxjs/Subject';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -151,6 +152,10 @@ export class Client {
      */
     this.refreshUserSubject = new Subject();
     this.storage = config.storage || StorageProvider.Memory;
+    /**
+     * @private
+     */
+    this.refreshUserSubject = new Subject();
   }
 
   /**
