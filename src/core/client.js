@@ -5,6 +5,7 @@ import isNumber from 'lodash/isNumber';
 import { KinveyError } from './errors';
 import { Log } from './log';
 import { isDefined, uuidv4 } from './utils';
+import { Subject } from 'rxjs/Subject';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -141,6 +142,11 @@ export class Client {
      * @private
      */
     this.activeUserStorage = new ActiveUserStorage();
+
+    /**
+     * @private
+     */
+    this.refreshUserSubject = new Subject();
   }
 
   /**
