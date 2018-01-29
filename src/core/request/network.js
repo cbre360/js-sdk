@@ -15,7 +15,6 @@ import { Request, RequestMethod } from './request';
 import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
-import { Log } from '../log';
 import { Subject } from 'rxjs/Subject';
 
 export class NetworkRequest extends Request {
@@ -387,20 +386,6 @@ export class KinveyRequest extends NetworkRequest {
 
       })
       .then(() => {
-
-        const now = new Date();
-        if (!this.client.refreshTimeout) {
-          Log.debug('setting logout time');
-          this.client.refreshTimeout = new Date();
-          this.client.refreshTimeout.setTime(now.getTime() + 1000 * 20);
-        } else if (this.url.indexOf('oauth') !== -1 || this.url.indexOf('login') !== -1) {
-          Log.debug('allowing refresh grants to pass through');
-        } else if (now > this.client.refreshTimeout) {
-          throw new InvalidCredentialsError('manually throwing timeout error');
-        } else {
-          Log.debug('uncaught timeout conditional', now, this.client.refreshTimeout);
-        }
-
         return super.execute();
       })
       .then((response) => {
@@ -432,7 +417,6 @@ export class KinveyRequest extends NetworkRequest {
               });
             }
 
-            Log.debug('refreshing access token');
             this.client._isRefreshing = true;
             const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
             const sessionKey = Object.keys(socialIdentity)
@@ -493,8 +477,6 @@ export class KinveyRequest extends NetworkRequest {
                   return request.execute()
                     .then((response) => response.data)
                     .then((user) => {
-                      Log.debug('got new user');
-                      Log.debug(JSON.stringify(user));
                       user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
                       this.client.refreshUserSubject.next(user);
                       return this.client.setActiveUser(user);
@@ -502,8 +484,6 @@ export class KinveyRequest extends NetworkRequest {
                 })
                 .then(() => {
                   this.client._isRefreshing = false;
-                  this.client.refreshTimeout = undefined;
-                  Log.debug('access token refreshed');
                   return this.execute(rawResponse, false);
                 })
                 .catch(err => {
