@@ -1,3 +1,4 @@
+import './polyfills';
 export { client, getAppVersion, setAppVersion, init, initialize, ping } from './kinvey';
 export { Acl } from './acl';
 export { Aggregation } from './aggregation';
@@ -10,6 +11,7 @@ export { Files } from './files';
 export { Log } from './log';
 export { Metadata } from './metadata';
 export { Query } from './query';
+export { Properties, StorageProvider } from './request';
 export { User } from './user';
 export {
   ActiveUserError,
