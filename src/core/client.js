@@ -8,7 +8,7 @@ import { Log } from './log';
 import { Subject } from 'rxjs/Subject';
 import { storageType } from './datastore';
 import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
-import { storageProvider } from './datastore';
+import { StorageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -155,8 +155,7 @@ export class Client {
      * @private
      */
     this.refreshUserSubject = new Subject();
-    this.storageType = config.storageType || storageType.inmemory;
-    this.storage = config.storage || storageProvider.inmemory;
+    this.storage = config.storage || StorageProvider.Memory;
   }
 
   /**
