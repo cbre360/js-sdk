@@ -6,8 +6,9 @@ import isNaN from 'lodash/isNaN';
 import { KinveyError } from './errors';
 import { Log } from './log';
 import { Subject } from 'rxjs/Subject';
-import { isDefined, uuidv4, isValidStorageTypeValue } from './utils';
 import { storageType } from './datastore';
+import { isDefined, uuidv4, isValidStorageProviderValue } from './utils';
+import { storageProvider } from './datastore';
 
 const DEFAULT_TIMEOUT = 60000;
 const ACTIVE_USER_KEY = 'active_user';
@@ -155,6 +156,7 @@ export class Client {
      */
     this.refreshUserSubject = new Subject();
     this.storageType = config.storageType || storageType.inmemory;
+    this.storage = config.storage || storageProvider.inmemory;
   }
 
   /**
@@ -232,16 +234,16 @@ export class Client {
     this._defaultTimeout = timeout;
   }
 
-  get storageType() {
-    return this._storageType;
+  get storage() {
+    return this._storage;
   }
 
-  set storageType(value) {
-    if (!isValidStorageTypeValue(value)) {
-      throw new KinveyError('Please provide a valid list of supported storage types for this platform');
+  set storage(value) {
+    if (!isValidStorageProviderValue(value)) {
+      throw new KinveyError('Please provide a valid list of supported storage providers for this platform');
     }
 
-    this._storageType = value;
+    this._storage = value;
   }
 
   /**
