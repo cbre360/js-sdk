@@ -386,23 +386,7 @@ export class KinveyRequest extends NetworkRequest {
         }
 
       })
-      .then(() => {
-
-        const now = new Date();
-        if (!this.client.refreshTimeout) {
-          Log.debug('setting logout time');
-          this.client.refreshTimeout = new Date();
-          this.client.refreshTimeout.setTime(now.getTime() + 1000 * 15);
-        } else if (this.url.indexOf('oauth') !== -1 || this.url.indexOf('login') !== -1) {
-          Log.debug('allowing refresh grants to pass through');
-        } else if (now > this.client.refreshTimeout && this.client._isRefreshing !== true) {
-          throw new InvalidCredentialsError('manually throwing timeout error');
-        } else {
-          Log.debug('uncaught timeout conditional', now, this.client.refreshTimeout);
-        }
-
-        return super.execute();
-      })
+      .then(() => super.execute())
       .then((response) => {
 
         if ((response instanceof KinveyResponse) === false) {
