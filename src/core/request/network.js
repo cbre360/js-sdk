@@ -486,7 +486,11 @@ export class KinveyRequest extends NetworkRequest {
                     return this.execute(rawResponse, false);
                   })
                   .catch(err => {
-                    return Promise.reject(err);
+                    Log.debug('caught error trying to refresh token');
+                    this.client._isRefreshing = false;
+                    this.client.refreshUserSubject.error(new InvalidCredentialsError('Cannot refresh session', this.id, 401));
+                    this.client.refreshUserSubject = new Subject();
+                    return Promise.resolve(error);
                   });
               }
             }
