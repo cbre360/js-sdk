@@ -406,9 +406,16 @@ export class KinveyRequest extends NetworkRequest {
       .catch((error) => {
         if (error instanceof InvalidCredentialsError) {
           if (this.client._isRefreshing === true) {
-            return new Promise(resolve => setTimeout(resolve, 400)).then(() => {
+            return new Promise(resolve => setTimeout(resolve, 250)).then(() => {
+              this.lastRetry = true;
               return this.execute(rawResponse, false);
             });
+          }
+
+          if (this.lastRetry === true) {
+            Log.debug('executing the last retry on this request before giving up', this.id);
+            this.lastRetry = false;
+            return this.execute(rawResponse, false);
           }
 
           if (retry) {
@@ -482,7 +489,6 @@ export class KinveyRequest extends NetworkRequest {
                   })
                   .then(() => {
                     this.client._isRefreshing = false;
-                    this.client.refreshTimeout = undefined;
                     return this.execute(rawResponse, false);
                   })
                   .catch(err => {
@@ -494,6 +500,9 @@ export class KinveyRequest extends NetworkRequest {
                   });
               }
             }
+          } else {
+            Log.debug('not retrying request with request id', this.id);
+            return Promise.reject(new InvalidCredentialsError('refresh process did not work, sending the user out of the app', this.id, 401));
           }
         } else if (retry && error instanceof InvalidGrantError) {
           Log.debug('caught invalid grant error');
