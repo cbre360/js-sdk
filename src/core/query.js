@@ -196,7 +196,11 @@ export class Query {
       if (supported) {
         const value = this.filter[key];
         return UNSUPPORTED_CONDITIONS.some((unsupportedConditions) => {
-          if (!value) {
+          if (!value || typeof value !== 'object') {
+            return true;
+          }
+
+          if (typeof value !== 'object') {
             return true;
           }
 
