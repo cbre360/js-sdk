@@ -10,11 +10,13 @@ import { Client } from '../client';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
 import { isDefined, appendQuery } from '../utils';
-import { InvalidCredentialsError, NoActiveUserError, KinveyError } from '../errors';
+import { InvalidCredentialsError, NoActiveUserError, KinveyError, InvalidGrantError } from '../errors';
 import { Request, RequestMethod } from './request';
 import { Headers } from './headers';
 import { NetworkRack } from './rack';
 import { KinveyResponse } from './response';
+import { Subject } from 'rxjs/Subject';
+import { Log } from '../log';
 
 export class NetworkRequest extends Request {
   constructor(options = {}) {
@@ -382,11 +384,11 @@ export class KinveyRequest extends NetworkRequest {
         } else {
           this.headers.remove('Authorization');
         }
+
       })
-      .then(() => {
-        return super.execute();
-      })
+      .then(() => super.execute())
       .then((response) => {
+
         if ((response instanceof KinveyResponse) === false) {
           response = new KinveyResponse({
             statusCode: response.statusCode,
@@ -402,77 +404,117 @@ export class KinveyRequest extends NetworkRequest {
         return response;
       })
       .catch((error) => {
-        if (retry && error instanceof InvalidCredentialsError) {
-          const activeUser = this.client.getActiveUser();
-
-          if (isDefined(activeUser)) {
-            const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
-            const sessionKey = Object.keys(socialIdentity)
-              .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
-            const oldSession = socialIdentity[sessionKey];
-
-            if (isDefined(oldSession)) {
-              const request = new KinveyRequest({
-                method: RequestMethod.POST,
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                authType: AuthType.App,
-                url: url.format({
-                  protocol: this.client.micProtocol,
-                  host: this.client.micHost,
-                  pathname: '/oauth/token'
-                }),
-                body: {
-                  grant_type: 'refresh_token',
-                  client_id: oldSession.client_id,
-                  redirect_uri: oldSession.redirect_uri,
-                  refresh_token: oldSession.refresh_token
-                },
-                properties: this.properties,
-                timeout: this.timeout
-              });
-              return request.execute()
-                .then(response => response.data)
-                .then((session) => {
-                  session.identity = oldSession.identity;
-                  session.client_id = oldSession.client_id;
-                  session.redirect_uri = oldSession.redirect_uri;
-                  session.protocol = this.client.micProtocol;
-                  session.host = this.client.micHost;
-                  return session;
-                })
-                .then((session) => {
-                  const data = {};
-                  socialIdentity[session.identity] = session;
-                  data._socialIdentity = socialIdentity;
-
-                  const request = new KinveyRequest({
-                    method: RequestMethod.POST,
-                    authType: AuthType.App,
-                    url: url.format({
-                      protocol: this.client.apiProtocol,
-                      host: this.client.apiHost,
-                      pathname: `/user/${this.client.appKey}/login`
-                    }),
-                    properties: this.properties,
-                    body: data,
-                    timeout: this.timeout,
-                    client: this.client
-                  });
-                  return request.execute()
-                    .then((response) => response.data)
-                    .then((user) => {
-                      user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
-                      return this.client.setActiveUser(user);
-                    });
-                })
-                .then(() => {
-                  return this.execute(rawResponse, false);
-                })
-                .catch(() => Promise.reject(error));
-            }
+        if (error instanceof InvalidCredentialsError) {
+          if (this.client._isRefreshing === true) {
+            return new Promise(resolve => setTimeout(resolve, 250)).then(() => {
+              this.lastRetry = true;
+              return this.execute(rawResponse, false);
+            });
           }
+
+          if (this.lastRetry === true) {
+            Log.debug('executing the last retry on this request before giving up', this.id);
+            this.lastRetry = false;
+            return this.execute(rawResponse, false);
+          }
+
+          if (retry) {
+            const activeUser = this.client.getActiveUser();
+
+            if (isDefined(activeUser)) {
+
+              const socialIdentity = isDefined(activeUser._socialIdentity) ? activeUser._socialIdentity : {};
+              const sessionKey = Object.keys(socialIdentity)
+                .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
+              const oldSession = socialIdentity[sessionKey];
+
+
+              if (isDefined(oldSession)) {
+                this.client._isRefreshing = true;
+                const request = new KinveyRequest({
+                  method: RequestMethod.POST,
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  authType: AuthType.App,
+                  url: url.format({
+                    protocol: this.client.micProtocol,
+                    host: this.client.micHost,
+                    pathname: '/oauth/token'
+                  }),
+                  body: {
+                    grant_type: 'refresh_token',
+                    client_id: oldSession.client_id,
+                    redirect_uri: oldSession.redirect_uri,
+                    refresh_token: oldSession.refresh_token
+                  },
+                  properties: this.properties,
+                  timeout: this.timeout
+                });
+                return request.execute()
+                  .then(response => response.data)
+                  .then((session) => {
+                    session.identity = oldSession.identity;
+                    session.client_id = oldSession.client_id;
+                    session.redirect_uri = oldSession.redirect_uri;
+                    session.protocol = this.client.micProtocol;
+                    session.host = this.client.micHost;
+                    return session;
+                  })
+                  .then((session) => {
+                    const data = {};
+                    socialIdentity[session.identity] = session;
+                    data._socialIdentity = socialIdentity;
+
+                    const request = new KinveyRequest({
+                      method: RequestMethod.POST,
+                      authType: AuthType.App,
+                      url: url.format({
+                        protocol: this.client.apiProtocol,
+                        host: this.client.apiHost,
+                        pathname: `/user/${this.client.appKey}/login`
+                      }),
+                      properties: this.properties,
+                      body: data,
+                      timeout: this.timeout,
+                      client: this.client
+                    });
+                    return request.execute()
+                      .then((response) => response.data)
+                      .then((user) => {
+                        user._socialIdentity[session.identity] = defaults(user._socialIdentity[session.identity], session);
+                        this.client.refreshUserSubject.next(user);
+                        return this.client.setActiveUser(user);
+                      });
+                  })
+                  .then(() => {
+                    this.client._isRefreshing = false;
+                    return this.execute(rawResponse, false);
+                  })
+                  .catch(err => {
+                    Log.debug('caught error trying to refresh token');
+                    this.client._isRefreshing = false;
+                    this.client.refreshUserSubject.error(new InvalidCredentialsError('Cannot refresh session', this.id, 401));
+                    this.client.refreshUserSubject = new Subject();
+                    return Promise.resolve(error);
+                  });
+              }
+            }
+          } else {
+            Log.debug('not retrying request with request id', this.id);
+            return Promise.reject(new InvalidCredentialsError('refresh process did not work, sending the user out of the app', this.id, 401));
+          }
+        } else if (retry && error instanceof InvalidGrantError) {
+          Log.debug('caught invalid grant error');
+          this.client._isRefreshing = false;
+          this.client.refreshUserSubject.error(new InvalidCredentialsError('Cannot refresh session', this.id, 401));
+          this.client.refreshUserSubject = new Subject();
+          return Promise.resolve(error);
+        } else if (!retry && error.statusCode >= 500) {
+          Log.debug('caught a 500 after refresh, log em out');
+          this.client._isRefreshing = false;
+          this.client.refreshUserSubject.error(new InvalidCredentialsError('Cannot refresh session', this.id, 401));
+          this.client.refreshUserSubject = new Subject();
         }
 
         return Promise.reject(error);

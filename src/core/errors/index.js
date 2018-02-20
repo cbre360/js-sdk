@@ -12,6 +12,7 @@ export * from './incompleteRequestBody';
 export * from './indirectCollectionAccessDisallowed';
 export * from './insufficientCredentials';
 export * from './invalidCredentials';
+export * from './invalidGrant';
 export * from './invalidIdentifier';
 export * from './invalidQuerySyntax';
 export * from './jsonParse';
