@@ -181,6 +181,8 @@ export class KinveyRequest extends NetworkRequest {
     this.skipBL = options.skipBL === true;
     this.trace = options.trace === true;
     this.clientId = options.clientId;
+    this.kinveyFileTTL = options.kinveyFileTTL;
+    this.kinveyFileTLS = options.kinveyFileTLS;
   }
 
   static execute(options, client, dataOnly = true) {
@@ -311,7 +313,11 @@ export class KinveyRequest extends NetworkRequest {
 
   get url() {
     const urlString = super.url;
-    const queryString = this.query ? this.query.toQueryString() : {};
+    let queryString = { kinveyfile_ttl: this.kinveyFileTTL, kinveyfile_tls: this.kinveyFileTLS };
+
+    if (this.query) {
+      queryString = Object.assign({}, queryString, this.query.toQueryString());
+    }
 
     if (isEmpty(queryString)) {
       return urlString;
