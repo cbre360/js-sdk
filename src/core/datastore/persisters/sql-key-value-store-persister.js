@@ -6,6 +6,9 @@ import { KeyValueStorePersister } from './key-value-store-persister';
 import { sqliteCollectionsMaster } from './utils';
 import { ensureArray } from '../../utils';
 
+/**
+ * @private
+ */
 export class SqlKeyValueStorePersister extends KeyValueStorePersister {
   _sqlModule;
 
@@ -18,7 +21,13 @@ export class SqlKeyValueStorePersister extends KeyValueStorePersister {
     const query = 'SELECT name AS value FROM #{collection} WHERE type = ?';
     return this._sqlModule.openTransaction(sqliteCollectionsMaster, query, ['table'], false)
       .then((response) => {
-        return response.filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table));
+        return response.filter((table) => {
+          if (table === '_QueryCache' || table === '__testSupport__') {
+            return true;
+          }
+
+          return /^[a-zA-Z0-9-]{1,128}/.test(table)
+        });
       });
   }
 

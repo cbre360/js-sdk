@@ -6,10 +6,14 @@ import { repositoryProvider } from '../repositories';
 import { DataProcessor } from './data-processor';
 import { generateEntityId, isEmpty } from '../utils';
 import { ensureArray, isDefined } from '../../utils';
+import { clearQueryCache } from '../querycache';
 
 // imported for typings
 // import { SyncManager } from '../sync';
 
+/**
+ * @private
+ */
 export class OfflineDataProcessor extends DataProcessor {
   /** @type {SyncManager} */
   _syncManager;
@@ -64,6 +68,7 @@ export class OfflineDataProcessor extends DataProcessor {
 
   _processClear(collection, query, options) {
     return this._syncManager.clearSync(collection, query)
+      .then(() => clearQueryCache(collection))
       .then(() => this._getRepository())
       .then(repo => repo.delete(collection, query, options));
   }
