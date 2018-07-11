@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.11.4](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-07-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.3...v3.11.4)<br/>
+
+#### Bugs
+- MLIBZ-2580: Use correct Authorization header value when sending a request to refresh a MIC access token. [#315](https://github.com/Kinvey/js-sdk/pull/315)
+- MLIBZ-2585: Queue network requests while in the middle of refreshing a MIC access token. [#321](https://github.com/Kinvey/js-sdk/pull/321)
+- MLIBZ-2586: Use PubNub fork to fix Live Service on Android for NativeScript. [#326](https://github.com/Kinvey/js-sdk/pull/326)
+
+## [3.11.3](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-06-29)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.2...v3.11.3)<br/>
+
+#### Enhancements
+- MLIBZ-2575: Validate file size before uploading. MLIBZ-2443 and MLIBZ-2444 are related. [#313](https://github.com/Kinvey/js-sdk/pull/313)
+
+#### Bugs
+- MLIBZ-2552: Don't try to access undefined. [#312](https://github.com/Kinvey/js-sdk/pull/312)
+- MLIBZ-2450: Prevent the active user from being removed when clearing the DataStore cache and local storage is used as the storage adapter. [#311](https://github.com/Kinvey/js-sdk/pull/311)
+- MLIBZ-2526: Remove `_kmd.local` property before sending entity to the backend. [#310](https://github.com/Kinvey/js-sdk/pull/310)
+
+## [3.11.2](https://github.com/Kinvey/js-sdk/tree/v3.11.2) (2018-06-15)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.1...v3.11.2)<br/>
+
+#### Enhancements
+- MLIBZ-2528: Handle MIC OAuth errors in redirect uri responses [#307](https://github.com/Kinvey/js-sdk/pull/307)
+
+#### Tests
+- Fixed file tests [#304](https://github.com/Kinvey/js-sdk/pull/304)
+
+## [3.11.1](https://github.com/Kinvey/js-sdk/tree/v3.11.1) (2018-06-01)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.0...v3.11.1)<br/>
+
+#### Bugs
+- MLIBZ-2303: `User.me()` does not delete empty fields [#299](https://github.com/Kinvey/js-sdk/pull/299)
+- MLIBZ-2455: Fix incorrect TypeScript definition for `User.lookup()` [#301](https://github.com/Kinvey/js-sdk/pull/301)
+- MLIBZ-2452: NativeScript Android File Uploads throw an Error [#300](https://github.com/Kinvey/js-sdk/pull/300)
+- MLIBZ-2323: Don't swallow error when using observable [#302](https://github.com/Kinvey/js-sdk/pull/302)
+
+#### Tests
+- Add back execution of integration file tests for NativeScript [#303](https://github.com/Kinvey/js-sdk/pull/303)
+
+## [3.11.0](https://github.com/Kinvey/js-sdk/tree/v3.11.0) (2018-05-23)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.3...v3.11.0)<br/>
+
+- QA-196: Add integration tests for files. [#293](https://github.com/Kinvey/js-sdk/pull/293)
+- Add push bundle for iOS and Android to files property in `package.json` for the Kinvey NativeScript SDK. [#296](https://github.com/Kinvey/js-sdk/pull/296)
+- MLIBZ-2316: Server Side Delta Set [#270](https://github.com/Kinvey/js-sdk/pull/270)
+- MLIBZ-2517: Delete mutiple entities properply with Server Side Delta Set [#297](https://github.com/Kinvey/js-sdk/pull/297)
+- MLIBZ-2520: Delete entities properly with Auto Pagination [#298](https://github.com/Kinvey/js-sdk/pull/298)
+
 ## [3.10.3](https://github.com/Kinvey/js-sdk/tree/v3.10.3) (2018-05-08)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.10.2...v3.10.3)<br/>
 

@@ -15,6 +15,7 @@ import { Operation, OperationType } from './operations';
 import { processorFactory } from './processors';
 
 /**
+ * @private
  * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
  */
 export class NetworkStore {
@@ -37,11 +38,6 @@ export class NetworkStore {
      * @type {Client}
      */
     this.client = options.client;
-
-    /**
-     * @type {boolean}
-     */
-    this.useDeltaFetch = options.useDeltaFetch === true;
   }
 
   /**
@@ -93,7 +89,7 @@ export class NetworkStore {
    * @param   {Properties}            [options.properties]                Custom properties to send with
    *                                                                      the request.
    * @param   {Number}                [options.timeout]                   Timeout for the request.
-   * @param   {Boolean}               [options.useDeltaFetch]             Turn on or off the use of delta fetch.
+   * @param   {Boolean}               [options.useDeltaSet]             Turn on or off the use of delta fetch.
    * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
@@ -102,7 +98,7 @@ export class NetworkStore {
       return wrapInObservable(errPromise);
     }
 
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    options = assign({ useDeltaSet: this.useDeltaSet }, options);
     const operation = this._buildOperationObject(OperationType.Read, query);
     const opPromise = this._executeOperation(operation, options);
     return this._ensureObservable(opPromise);
@@ -116,7 +112,7 @@ export class NetworkStore {
    * @param   {Properties}            [options.properties]             Custom properties to send with
    *                                                                   the request.
    * @param   {Number}                [options.timeout]                Timeout for the request.
-   * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
+   * @param   {Boolean}               [options.useDeltaSet]          Turn on or off the use of delta fetch.
    * @return  {Observable}                                             Observable.
    */
   findById(id, options = {}) {

@@ -10,6 +10,7 @@ import { syncManagerProvider } from './sync';
 import { formTaggedCollectionName, getEntitiesPendingPushError } from './utils';
 
 /**
+ * @private
  * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
  * in a cache and synced with the backend.
  */
@@ -24,6 +25,11 @@ export class CacheStore extends NetworkStore {
      */
     this.ttl = options.ttl || undefined;
     this.syncManager = syncManagerProvider.getSyncManager();
+
+    /**
+     * @type {boolean}
+     */
+    this.useDeltaSet = options.useDeltaSet === true;
   }
 
   /**
@@ -110,7 +116,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise.<number>}                                                Promise
    */
   pull(query, options = {}) {
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    options = assign({ useDeltaSet: this.useDeltaSet }, options);
     return this.syncManager.getSyncItemCountByEntityQuery(this.collection, query)
       .then((count) => {
         if (count > 0) {
@@ -134,7 +140,7 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise.<{push: [], pull: number}>}                              Promise
    */
   sync(query, options) {
-    options = assign({ useDeltaFetch: this.useDeltaFetch }, options);
+    options = assign({ useDeltaSet: this.useDeltaSet }, options);
     const result = {};
     return this.push(query, options)
       .then((pushResult) => {
